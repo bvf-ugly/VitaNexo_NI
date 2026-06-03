@@ -1,0 +1,87 @@
+import { GlucoseReading, Patient, Alert } from '../models/index.js'
+
+// Rangos de glucosa en mg/dL
+const RANGES = {
+  fasting:   { low: 70, normal: 100, high: 126 },   // ayunas
+  post_meal: { low: 70, normal: 140, high: 200 },   // 2h postprandial
+  random:    { low: 70, normal: 140, high: 200 },
+  bedtime:   { low: 80, normal: 120, high: 180 },
+}
+
+function classifyGlucose(value, context) {
+  const r = RANGES[context] || RANGES.random
+  if (value < r.low)    return { status: 'low',      label: 'Hipoglucemia',   alertType: 'critical' }
+  if (value <= r.normal) return { status: 'normal',   label: 'Normal',         alertType: null }
+  if (value <= r.high)   return { status: 'elevated', label: 'Elevada',        alertType: 'warning' }
+  return                        { status: 'high',     label: 'Alta (diabetes)', alertType: 'critical' }
+}
+
+// GET /api/glucose/patient/:patientId
+export async function getByPatient(req, res) {
+  try {
+    const readings = await GlucoseReading.find({ patient_id: req.params.patientId })
+      .sort({ recorded_at: -1 }).limit(90)
+    res.json(readings)
+  } catch (err) { res.status(500).json({ error: err.message }) }
+}
+
+// POST /api/glucose
+export async function create(req, res) {
+  try {
+    const { patient_id, value_mgdl, context = 'random', notes, recorded_at } = req.body
+
+    if (!patient_id || !value_mgdl) {
+      return res.status(400).json({ error: 'patient_id y value_mgdl son requeridos' })
+    }
+
+    const reading = await GlucoseReading.create({
+      patient_id, value_mgdl, context, notes,
+      recorded_at: recorded_at || new Date(),
+    })
+
+    // Generar alerta automática si está fuera de rango
+    const { alertType, label } = classifyGlucose(value_mgdl, context)
+    if (alertType) {
+      await Alert.create({
+        patient_id,
+        type: alertType,
+        message: `Glucosa ${label}: ${value_mgdl} mg/dL (${context === 'fasting' ? 'ayunas' : context === 'post_meal' ? 'postprandial' : 'aleatoria'})`,
+      })
+    }
+
+    const classification = classifyGlucose(value_mgdl, context)
+    res.status(201).json({ reading, classification })
+  } catch (err) { res.status(500).json({ error: err.message }) }
+}
+
+// GET /api/glucose/patient/:patientId/stats — estadísticas del último mes
+export async function stats(req, res) {
+  try {
+    const since = new Date(Date.now() - 30 * 86400_000)
+    const readings = await GlucoseReading.find({
+      patient_id: req.params.patientId,
+      recorded_at: { $gte: since },
+    }).sort({ recorded_at: 1 })
+
+    if (!readings.length) return res.json({ count: 0 })
+
+    const values = readings.map(r => r.value_mgdl)
+    const avg    = values.reduce((a, b) => a + b, 0) / values.length
+    const min    = Math.min(...values)
+    const max    = Math.max(...values)
+
+    const inRange = readings.filter(r => {
+      const { status } = classifyGlucose(r.value_mgdl, r.context)
+      return status === 'normal'
+    }).length
+
+    res.json({
+      count:          readings.length,
+      avg_mgdl:       Math.round(avg),
+      min_mgdl:       min,
+      max_mgdl:       max,
+      in_range_pct:   Math.round((inRange / readings.length) * 100),
+      readings,
+    })
+  } catch (err) { res.status(500).json({ error: err.message }) }
+}

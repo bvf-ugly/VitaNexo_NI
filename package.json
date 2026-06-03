@@ -1,0 +1,21 @@
+{
+  "name": "vitanexo",
+  "private": true,
+  "packageManager": "pnpm@9.0.0",
+  "scripts": {
+    "dev:backend": "pnpm --filter backend dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev:mobile": "pnpm --filter mobile start",
+    "seed": "pnpm --filter backend seed",
+    "test": "pnpm -r test",
+    "install:all": "pnpm install",
+    "clean:all": "pnpm -r exec -- cmd /c \"if exist node_modules rmdir /s /q node_modules\" && if exist node_modules rmdir /s /q node_modules"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}

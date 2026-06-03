@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply min-h-screen bg-[#f8fafc] text-slate-900 antialiased;
+  }
+  .dark body {
+    @apply bg-slate-900 text-slate-100;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-2xl border border-slate-100 shadow-sm;
+  }
+  .dark .card {
+    @apply bg-slate-800 border-slate-700 shadow-slate-900/30;
+  }
+
+  .stat-value {
+    @apply text-2xl font-extrabold;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold;
+  }
+}
+
+/* ── Sidebar collapse ─────────────────────────── */
+#vn-sidebar {
+  width: 240px;
+  transition: width 0.2s ease;
+}
+#vn-sidebar.collapsed {
+  width: 64px;
+}
+#vn-sidebar.collapsed .vn-nav-label,
+#vn-sidebar.collapsed .vn-sidebar-title,
+#vn-sidebar.collapsed .vn-footer-text,
+#vn-sidebar.collapsed .vn-section-label {
+  display: none;
+}
+#vn-sidebar.collapsed .vn-nav-badge {
+  display: none;
+}
+#vn-sidebar.collapsed .vn-nav-item {
+  gap: 0 !important;
+  justify-content: center !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+#vn-sidebar.collapsed .vn-footer-btn {
+  gap: 0 !important;
+  justify-content: center !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
+#vn-sidebar.collapsed .vn-footer-btn .vn-footer-text {
+  display: none;
+}

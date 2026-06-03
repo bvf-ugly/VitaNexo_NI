@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "VitaNexo",
+    "slug": "vitanexo",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "scheme": "vitanexo",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.vitanexo.app"
+    },
+    "android": {
+      "package": "com.vitanexo.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#0ea5e9"
+      }
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-secure-store",
+        { "faceIDPermission": "Acceso biométrico para VitaNexo" }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "eas": { "projectId": "local-dev" }
+    }
+  }
+}

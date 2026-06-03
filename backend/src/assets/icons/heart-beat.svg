@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="heartGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#dc2626"/>
+    </linearGradient>
+  </defs>
+  <path d="M100 170C100 170 30 120 30 75C30 50 50 30 70 30C85 30 95 40 100 50C105 40 115 30 130 30C150 30 170 50 170 75C170 120 100 170 100 170Z" fill="url(#heartGrad)" opacity="0.15"/>
+  <path d="M100 155C100 155 45 115 45 80C45 60 60 45 75 45C87 45 95 53 100 62C105 53 113 45 125 45C140 45 155 60 155 80C155 115 100 155 100 155Z" fill="url(#heartGrad)"/>
+  <path d="M70 80H85L92 65L100 95L108 72L115 85L130 80" stroke="white" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+</svg>
