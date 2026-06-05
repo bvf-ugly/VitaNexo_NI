@@ -1,13 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
+import { HashRouter } from 'react-router-dom'
 import App from './App.tsx'
 import { AuthProvider, ThemeProvider, SidebarProvider } from './context.tsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <HashRouter>
       <ThemeProvider>
         <AuthProvider>
           <SidebarProvider>
@@ -15,6 +15,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           </SidebarProvider>
         </AuthProvider>
       </ThemeProvider>
-    </BrowserRouter>
+    </HashRouter>
   </React.StrictMode>
 )

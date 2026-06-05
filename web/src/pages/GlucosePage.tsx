@@ -4,6 +4,7 @@ import {
   Tooltip, ReferenceLine, ResponsiveContainer,
 } from 'recharts'
 import api, { getMyPatientId } from '../services/api'
+import { Droplets, TrendingDown, TrendingUp, BarChart3, Plus } from 'lucide-react'
 
 const CONTEXT_LABELS: Record<string, string> = {
   fasting:   'Ayunas',
@@ -13,10 +14,10 @@ const CONTEXT_LABELS: Record<string, string> = {
 }
 
 const STATUS_BADGE: Record<string, string> = {
-  low:      'bg-blue-100 text-blue-700',
-  normal:   'bg-green-100 text-green-700',
-  elevated: 'bg-yellow-100 text-yellow-700',
-  high:     'bg-red-100 text-red-700',
+  low:      'badge-info',
+  normal:   'badge-success',
+  elevated: 'badge-warning',
+  high:     'badge-danger',
 }
 const STATUS_LABEL: Record<string, string> = {
   low: 'Hipoglucemia', normal: 'Normal', elevated: 'Elevada', high: 'Alta',
@@ -46,22 +47,17 @@ export default function GlucosePage() {
   const [msg,       setMsg]       = useState<{ text: string; ok: boolean } | null>(null)
   const [loading,   setLoading]   = useState(true)
 
-  // Carga stats + lecturas para gráfica y tabla
   const loadData = useCallback(async (pid: string) => {
     try {
       const { data } = await api.get(`/glucose/patient/${pid}/stats`, {
         params: { chart_days: 60, stats_days: 30 },
       })
       setStats(data)
-
-      // readings ya viene ASC del backend — directo a recharts
       const readings: any[] = data.readings || []
       setChartData(readings.map(r => ({
         fecha:   new Date(r.recorded_at).toLocaleDateString('es-NI', { month: 'short', day: 'numeric' }),
         glucosa: r.value_mgdl,
       })))
-
-      // Tabla: orden DESC (más reciente primero), máx 15 filas
       setTableRows([...readings].reverse().slice(0, 15))
     } catch (err) {
       console.error('loadData error', err)
@@ -90,12 +86,11 @@ export default function GlucosePage() {
         notes:      form.notes || undefined,
       })
       const { label } = data.classification
-      setMsg({ text: `✅ Guardado — ${data.reading.value_mgdl} mg/dL · ${label}`, ok: true })
+      setMsg({ text: `Guardado - ${data.reading.value_mgdl} mg/dL - ${label}`, ok: true })
       setForm({ value_mgdl: '', context: 'fasting', notes: '' })
-      // Recargar datos completos para reflejar en gráfica y tabla
       await loadData(patientId)
     } catch (err: any) {
-      setMsg({ text: '❌ ' + (err.response?.data?.error || 'Error al guardar'), ok: false })
+      setMsg({ text: err.response?.data?.error || 'Error al guardar', ok: false })
     } finally {
       setSaving(false)
     }
@@ -103,103 +98,116 @@ export default function GlucosePage() {
 
   if (loading) {
     return (
-      <div className="p-8 flex items-center gap-3 text-slate-400">
-        <span className="w-5 h-5 border-2 border-sky-400 border-t-transparent rounded-full vn-spin" />
-        Cargando historial...
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="flex items-center gap-3 text-slate-400">
+          <span className="w-5 h-5 border-2 border-primary-400 border-t-transparent rounded-full animate-spin" />
+          <span>Cargando historial...</span>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="p-5 md:p-8 max-w-5xl">
-      <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-1">🩸 Historial de Glucosa</h2>
-      <p className="text-slate-400 dark:text-slate-500 text-sm mb-6">
-        Monitoreo de glucemia — {stats?.count ? `${stats.count} lecturas en el período` : 'Sin lecturas aún'}
-      </p>
+      <div className="w-full max-w-7xl animate-fade-in">
+      {/* Header — Persistent */}
+      <div className="page-header">
+        <h1 className="page-title">
+          <span className="inline-flex items-center gap-2">
+            <Droplets size={24} className="text-primary-500" aria-hidden />
+            Historial de Glucosa
+          </span>
+        </h1>
+        <p className="page-subtitle">
+          Monitoreo de glucemia &mdash; {stats?.count ? `${stats.count} lecturas en el periodo` : 'Sin lecturas aun'}
+        </p>
+      </div>
 
-      {/* Tarjetas de stats */}
+      {/* Stats cards */}
       {stats && stats.count > 0 && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6 animate-fade-in">
           {[
-            { label: 'Promedio',  value: `${stats.avg_mgdl} mg/dL`, icon: '📊', color: 'border-sky-200   dark:border-sky-800   bg-sky-50   dark:bg-sky-950' },
-            { label: 'Mínimo',   value: `${stats.min_mgdl} mg/dL`, icon: '⬇️', color: 'border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950' },
-            { label: 'Máximo',   value: `${stats.max_mgdl} mg/dL`, icon: '⬆️', color: 'border-amber-200  dark:border-amber-800  bg-amber-50  dark:bg-amber-950' },
-            { label: 'En rango', value: `${stats.in_range_pct}%`,  icon: '✅', color: 'border-green-200  dark:border-green-800  bg-green-50  dark:bg-green-950' },
+            { label: 'Promedio',  value: `${stats.avg_mgdl} mg/dL`, icon: BarChart3, color: 'primary' },
+            { label: 'Minimo',   value: `${stats.min_mgdl} mg/dL`, icon: TrendingDown, color: 'blue' },
+            { label: 'Maximo',   value: `${stats.max_mgdl} mg/dL`, icon: TrendingUp, color: 'amber' },
+            { label: 'En rango', value: `${stats.in_range_pct}%`,  icon: TrendingUp, color: 'emerald' },
           ].map(s => (
-            <div key={s.label} className={`border rounded-xl p-4 ${s.color}`}>
-              <div className="text-xl mb-1">{s.icon}</div>
-              <div className="font-bold text-slate-800 dark:text-slate-100 text-lg">{s.value}</div>
-              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{s.label} — 30 días</div>
+            <div key={s.label} className="stat-card">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-3 bg-${s.color}-100 dark:bg-${s.color}-900/30`}>
+                <s.icon size={20} className={`text-${s.color}-600 dark:text-${s.color}-400`} aria-hidden />
+              </div>
+              <div className="font-bold text-slate-800 dark:text-slate-100 text-lg font-heading">{s.value}</div>
+              <div className="text-xs text-slate-500 dark:text-slate-400 mt-1">{s.label} &mdash; 30 dias</div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Gráfica */}
+      {/* Chart */}
       {chartData.length > 0 ? (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5 mb-6">
-          <h3 className="font-semibold text-slate-700 dark:text-slate-300 mb-4">
+        <div className="card mb-6 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+          <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-4 font-heading">
             Tendencia ({chartData.length} lecturas)
           </h3>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={chartData} margin={{ left: -10, right: 10 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <CartesianGrid strokeDasharray="3 3" stroke="#e3f1ff" />
               <XAxis dataKey="fecha" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
               <YAxis domain={[40, 260]} tick={{ fontSize: 11 }} unit=" mg/dL" />
               <Tooltip formatter={(v: any) => [`${v} mg/dL`, 'Glucosa']} />
-              <ReferenceLine y={70}  stroke="#3b82f6" strokeDasharray="4 4"
-                label={{ value: 'Hipo', position: 'insideTopRight', fontSize: 10, fill: '#3b82f6' }} />
-              <ReferenceLine y={100} stroke="#22c55e" strokeDasharray="4 4"
-                label={{ value: 'Normal', position: 'insideTopRight', fontSize: 10, fill: '#22c55e' }} />
-              <ReferenceLine y={140} stroke="#f59e0b" strokeDasharray="4 4"
-                label={{ value: 'Elevada', position: 'insideTopRight', fontSize: 10, fill: '#f59e0b' }} />
+              <ReferenceLine y={70}  stroke="#5a82a6" strokeDasharray="4 4"
+                label={{ value: 'Hipo', position: 'insideTopRight', fontSize: 10, fill: '#5a82a6' }} />
+              <ReferenceLine y={100} stroke="#4CAF50" strokeDasharray="4 4"
+                label={{ value: 'Normal', position: 'insideTopRight', fontSize: 10, fill: '#4CAF50' }} />
+              <ReferenceLine y={140} stroke="#FF9800" strokeDasharray="4 4"
+                label={{ value: 'Elevada', position: 'insideTopRight', fontSize: 10, fill: '#FF9800' }} />
               <Line
                 type="monotone" dataKey="glucosa"
-                stroke="#0ea5e9" strokeWidth={2}
-                dot={{ r: 3, fill: '#0ea5e9' }}
+                stroke="#5a82a6" strokeWidth={2}
+                dot={{ r: 3, fill: '#5a82a6' }}
                 activeDot={{ r: 5 }}
               />
             </LineChart>
           </ResponsiveContainer>
         </div>
       ) : (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-8 mb-6 text-center text-slate-400">
-          Sin lecturas registradas aún. Agrega la primera abajo.
+        <div className="card mb-6 text-center py-12">
+          <Droplets size={48} className="mx-auto text-slate-300 dark:text-slate-600 mb-3" aria-hidden />
+          <p className="text-slate-400 dark:text-slate-500">Sin lecturas registradas aun. Agrega la primera abajo.</p>
         </div>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Tabla */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden">
-          <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
-            <h3 className="font-semibold text-slate-700 dark:text-slate-300">Últimas lecturas</h3>
-            <span className="text-xs text-slate-400">{tableRows.length} registros</span>
+        {/* Table */}
+        <div className="card overflow-hidden animate-fade-in" style={{ animationDelay: '0.15s' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-slate-700 dark:text-slate-200 font-heading">Ultimas lecturas</h3>
+            <span className="badge-primary">{tableRows.length} registros</span>
           </div>
           <div className="overflow-auto max-h-72">
             {tableRows.length === 0 ? (
-              <p className="p-5 text-slate-400 text-sm">Sin lecturas registradas.</p>
+              <p className="text-slate-400 dark:text-slate-500 text-sm text-center py-8">Sin lecturas registradas.</p>
             ) : (
               <table className="w-full text-sm">
-                <thead className="bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs sticky top-0">
+                <thead className="bg-slate-50/80 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 text-xs sticky top-0">
                   <tr>
-                    <th className="px-4 py-2 text-left">Fecha</th>
-                    <th className="px-4 py-2 text-left">mg/dL</th>
-                    <th className="px-4 py-2 text-left">Contexto</th>
-                    <th className="px-4 py-2 text-left">Estado</th>
+                    <th className="px-4 py-2 text-left font-medium">Fecha</th>
+                    <th className="px-4 py-2 text-left font-medium">mg/dL</th>
+                    <th className="px-4 py-2 text-left font-medium">Contexto</th>
+                    <th className="px-4 py-2 text-left font-medium">Estado</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-slate-100/80 dark:divide-slate-700/50">
                   {tableRows.map((r, i) => {
                     const status = classify(r.value_mgdl, r.context)
                     return (
-                      <tr key={r._id || i} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td className="px-4 py-2 text-slate-500 whitespace-nowrap">
+                      <tr key={r._id || i} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors duration-150">
+                        <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400 whitespace-nowrap">
                           {new Date(r.recorded_at).toLocaleDateString('es-NI', { month: 'short', day: 'numeric' })}
                         </td>
-                        <td className="px-4 py-2 font-bold text-slate-800 dark:text-slate-100">{r.value_mgdl}</td>
-                        <td className="px-4 py-2 text-slate-500">{CONTEXT_LABELS[r.context] || r.context}</td>
-                        <td className="px-4 py-2">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_BADGE[status]}`}>
+                        <td className="px-4 py-2.5 font-bold text-slate-800 dark:text-slate-100">{r.value_mgdl}</td>
+                        <td className="px-4 py-2.5 text-slate-500 dark:text-slate-400">{CONTEXT_LABELS[r.context] || r.context}</td>
+                        <td className="px-4 py-2.5">
+                          <span className={`badge ${STATUS_BADGE[status]}`}>
                             {STATUS_LABEL[status]}
                           </span>
                         </td>
@@ -212,59 +220,68 @@ export default function GlucosePage() {
           </div>
         </div>
 
-        {/* Formulario */}
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-5">
-          <h3 className="font-semibold text-slate-700 dark:text-slate-300 mb-4">Registrar nueva lectura</h3>
-          <form onSubmit={submitReading} className="space-y-3">
+        {/* Form */}
+        <div className="card animate-fade-in" style={{ animationDelay: '0.2s' }}>
+          <h3 className="font-semibold text-slate-700 dark:text-slate-200 mb-4 font-heading">Registrar nueva lectura</h3>
+          <form onSubmit={submitReading} className="space-y-4">
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Glucosa (mg/dL)</label>
+              <label className="label">Glucosa (mg/dL)</label>
               <input
                 type="number" min="20" max="600" required
                 value={form.value_mgdl}
                 onChange={e => setForm(f => ({ ...f, value_mgdl: e.target.value }))}
-                className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="input"
                 placeholder="ej. 95"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Contexto</label>
+              <label className="label">Contexto</label>
               <select
                 value={form.context}
                 onChange={e => setForm(f => ({ ...f, context: e.target.value }))}
-                className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-400"
+                className="input"
               >
                 <option value="fasting">Ayunas</option>
-                <option value="post_meal">Postprandial (2h después de comer)</option>
+                <option value="post_meal">Postprandial (2h despues de comer)</option>
                 <option value="random">Aleatoria</option>
                 <option value="bedtime">Antes de dormir</option>
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Notas (opcional)</label>
+              <label className="label">Notas (opcional)</label>
               <input
                 type="text" value={form.notes}
                 onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                className="w-full border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-400"
-                placeholder="ej. Después del desayuno"
+                className="input"
+                placeholder="ej. Despues del desayuno"
               />
             </div>
 
             {msg && (
-              <div className={`text-sm px-3 py-2 rounded-lg border ${
+              <div className={`text-sm px-4 py-3 rounded-xl border ${
                 msg.ok
-                  ? 'bg-green-50 text-green-700 border-green-200'
-                  : 'bg-red-50 text-red-700 border-red-200'
-              }`}>
+                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800/40'
+                  : 'bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300 border-red-200 dark:border-red-800/40'
+              }`} role="alert">
                 {msg.text}
               </div>
             )}
 
             <button
               type="submit" disabled={saving}
-              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium rounded-lg py-2.5 text-sm transition disabled:opacity-50 flex items-center justify-center gap-2"
+              className="btn-primary w-full"
             >
-              {saving && <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full vn-spin" />}
-              {saving ? 'Guardando...' : 'Guardar lectura'}
+              {saving ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <span>Guardando...</span>
+                </>
+              ) : (
+                <>
+                  <Plus size={18} aria-hidden />
+                  <span>Guardar lectura</span>
+                </>
+              )}
             </button>
           </form>
         </div>

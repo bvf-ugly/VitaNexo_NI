@@ -1,6 +1,7 @@
 import axios from 'axios'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
+const IS_DEMO = window.location.hostname.includes('github.io')
 
 const TOKEN_KEY = 'vn_token'
 const REFRESH_KEY = 'vn_refresh'
@@ -29,6 +30,7 @@ const api = axios.create({
 
 /** Obtiene el patientId del usuario logueado (solo funciona para rol patient) */
 export async function getMyPatientId(): Promise<string | null> {
+  if (IS_DEMO) return 'demo-patient-001'
   try {
     const { data } = await api.get('/patients/me')
     return data?._id || null
@@ -46,13 +48,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (res) => res,
   async (err) => {
+    if (IS_DEMO) return Promise.reject(err)
     const original = err.config
     if (err.response?.status === 401 && !original._retry) {
       original._retry = true
       const refreshToken = getRefreshToken()
       if (!refreshToken) {
         clearAuth()
-        window.location.href = '/login'
+        window.location.href = '/#/login'
         return Promise.reject(err)
       }
       try {
@@ -63,11 +66,12 @@ api.interceptors.response.use(
         return api(original)
       } catch {
         clearAuth()
-        window.location.href = '/login'
+        window.location.href = '/#/login'
       }
     }
     return Promise.reject(err)
   }
 )
 
+export { IS_DEMO }
 export default api
