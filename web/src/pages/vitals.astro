@@ -1,0 +1,95 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="VitaNexo · Signos Vitales">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <h1>Signos vitales</h1>
+      <div class="sub">Buenos días, Shinji Ikari</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="avatar" style="width:38px; height:38px; font-size:14px; border-radius:10px;">SI</div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- KPIs -->
+    <div class="grid grid-3" style="margin-bottom:18px;">
+      <div class="kpi-card" style="--accent:var(--nerv-magenta)">
+        <div class="top">
+          <div>
+            <div class="label">HOY</div>
+            <div class="value">72<span class="unit"> bpm</span></div>
+          </div>
+          <i class="ti ti-heartbeat"></i>
+        </div>
+      </div>
+      <div class="kpi-card" style="--accent:var(--nerv-violet)">
+        <div class="top">
+          <div>
+            <div class="label">PROMEDIO 7D</div>
+            <div class="value">71<span class="unit"> bpm</span></div>
+          </div>
+          <i class="ti ti-chart-line"></i>
+        </div>
+      </div>
+      <div class="kpi-card" style="--accent:var(--nerv-green)">
+        <div class="top">
+          <div>
+            <div class="label">EN RANGO</div>
+            <div class="value">100<span class="unit">%</span></div>
+          </div>
+          <i class="ti ti-shield-check"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- Chart Panel -->
+    <div class="panel">
+      <h2><i class="ti ti-chart-line"></i> Saturación de oxígeno — 7 días</h2>
+      <div class="chart-bars">
+        <div class="bar" style="height:96%" data-sound="hover"></div>
+        <div class="bar" style="height:94%" data-sound="hover"></div>
+        <div class="bar" style="height:98%" data-sound="hover"></div>
+        <div class="bar" style="height:97%" data-sound="hover"></div>
+        <div class="bar" style="height:99%" data-sound="hover"></div>
+        <div class="bar" style="height:95%" data-sound="hover"></div>
+        <div class="bar" style="height:98%" data-sound="hover"></div>
+      </div>
+      <div class="chart-labels">
+        <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+      </div>
+    </div>
+
+    <!-- Records Panel -->
+    <div class="panel">
+      <h2><i class="ti ti-list"></i> Registros recientes</h2>
+      <div class="list-row" data-sound="click">
+        <div class="icon-box"><i class="ti ti-heartbeat"></i></div>
+        <div class="info">
+          <div class="title">72 bpm · 118/76 mmHg</div>
+          <div class="meta">Hoy · 08:30 · Manual</div>
+        </div>
+        <span class="badge badge-success">Normal</span>
+      </div>
+      <div class="list-row" data-sound="click">
+        <div class="icon-box"><i class="ti ti-heartbeat"></i></div>
+        <div class="info">
+          <div class="title">68 bpm · 120/78 mmHg</div>
+          <div class="meta">Ayer · 21:10 · Manual</div>
+        </div>
+        <span class="badge badge-success">Normal</span>
+      </div>
+      <div class="list-row" data-sound="click">
+        <div class="icon-box"><i class="ti ti-heartbeat"></i></div>
+        <div class="info">
+          <div class="title">75 bpm · 122/80 mmHg</div>
+          <div class="meta">Hace 2 días · 07:45</div>
+        </div>
+        <span class="badge badge-success">Normal</span>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,50 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="VitaNexo · Dashboard">
+  <div class="banner compact">
+    <div class="tag">VITANEXO // STATUS</div>
+    <h2>SHINJI IKARI</h2>
+  </div>
+
+  <div class="dash-body">
+    <a class="back" href="/"><i class="ti ti-arrow-left"></i> Volver al login</a>
+
+    <div class="kpi">
+      <div>
+        <div class="label">HEART RATE</div>
+        <div class="value">72 <span class="unit">bpm</span></div>
+      </div>
+      <i class="ti ti-heartbeat"></i>
+    </div>
+
+    <div class="row" style="--accent: var(--nerv-magenta)">
+      <i class="ti ti-pill icon"></i>
+      <div class="name">MEDICATIONS</div>
+      <div class="val">03</div>
+    </div>
+    <div class="row" style="--accent: var(--nerv-orange)">
+      <i class="ti ti-calendar-event icon"></i>
+      <div class="name">NEXT APPOINTMENT</div>
+      <div class="val">FRI 09:00</div>
+    </div>
+    <div class="row" style="--accent: var(--nerv-green)">
+      <i class="ti ti-droplet icon"></i>
+      <div class="name">OXYGEN SAT</div>
+      <div class="val">98%</div>
+    </div>
+    <div class="row" style="--accent: var(--nerv-violet)">
+      <i class="ti ti-report-medical icon"></i>
+      <div class="name">RECENT VISITS</div>
+      <div class="val">02</div>
+    </div>
+
+    <div class="navbar">
+      <i class="ti ti-home active"></i>
+      <i class="ti ti-heart"></i>
+      <i class="ti ti-pill"></i>
+      <i class="ti ti-calendar"></i>
+      <i class="ti ti-user"></i>
+    </div>
+  </div>
+</Layout>

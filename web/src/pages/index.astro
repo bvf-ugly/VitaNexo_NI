@@ -1,0 +1,83 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="VitaNexo · Ingresar">
+  <div style="display: flex; min-height: 100vh; width: 100%; align-items: center; justify-content: center; padding: 24px;">
+    <div class="phone">
+      <div class="banner">
+        <div class="logo">M E D I C A L &nbsp; A C C E S S</div>
+        <h1>VITANEXO</h1>
+        <p style="color: rgba(10,10,15,0.6); font-size: 10px; margin-top: 6px; letter-spacing: 0.1em; font-weight: 600;">NERV DEEP // SISTEMA MÉDICO</p>
+      </div>
+
+      <div class="body">
+        <div class="role-tabs">
+          <div class="role-tab active" id="tab-patient" data-sound="click">PACIENTE</div>
+          <div class="role-tab" id="tab-doctor" data-sound="click">DOCTOR</div>
+        </div>
+
+        <div class="field">
+          <label>CORREO ELECTRÓNICO</label>
+          <input type="email" id="login-email" placeholder="tu@email.com" value="shinji@vitanexo.com" />
+        </div>
+        <div class="field">
+          <label>CONTRASEÑA</label>
+          <input type="password" placeholder="••••••••" value="Patient1234!" />
+        </div>
+        <button class="btn btn-primary" id="btn-login" data-sound="click">INGRESAR</button>
+        <button class="btn-ghost" id="btn-register" data-sound="click">¿No tienes cuenta? Regístrate</button>
+
+        <div class="demo-note">
+          🧪 Demo estático — cualquier credencial te lleva al dashboard correspondiente. Sin validación real.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script is:inline>
+    // Handle role tab switching client-side
+    let selectedRole = 'patient';
+    const tabPatient = document.getElementById('tab-patient');
+    const tabDoctor = document.getElementById('tab-doctor');
+    const emailInput = document.getElementById('login-email');
+    const btnLogin = document.getElementById('btn-login');
+    const btnRegister = document.getElementById('btn-register');
+
+    function selectRole(role) {
+      selectedRole = role;
+      if (role === 'doctor') {
+        tabDoctor.classList.add('active');
+        tabPatient.classList.remove('active');
+        if (emailInput) emailInput.value = 'yui@vitanexo.com';
+      } else {
+        tabPatient.classList.add('active');
+        tabDoctor.classList.remove('active');
+        if (emailInput) emailInput.value = 'shinji@vitanexo.com';
+      }
+    }
+
+    if (tabPatient && tabDoctor) {
+      tabPatient.addEventListener('click', () => selectRole('patient'));
+      tabDoctor.addEventListener('click', () => selectRole('doctor'));
+    }
+
+    function doLogin() {
+      // Save role to localStorage
+      localStorage.setItem('vitanexo_role', selectedRole);
+      
+      // Navigate to correct dashboard
+      if (selectedRole === 'doctor') {
+        window.location.href = '/doctor/agenda';
+      } else {
+        window.location.href = '/dashboard';
+      }
+    }
+
+    if (btnLogin) {
+      btnLogin.addEventListener('click', doLogin);
+    }
+    if (btnRegister) {
+      btnRegister.addEventListener('click', doLogin);
+    }
+  </script>
+</Layout>

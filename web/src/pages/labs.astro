@@ -1,0 +1,66 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="VitaNexo · Laboratorios">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <h1>Laboratorios</h1>
+      <div class="sub">Buenos días, Shinji Ikari</div>
+    </div>
+    <div class="topbar-actions">
+      <div class="avatar" style="width:38px; height:38px; font-size:14px; border-radius:10px;">SI</div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <div class="panel">
+      <h2><i class="ti ti-flask"></i> Resultados de laboratorio</h2>
+      
+      <div class="list-row" style="border-bottom: none; margin-bottom: 0;">
+        <div class="info">
+          <div class="title">Glucosa en ayunas</div>
+          <div class="meta">88 mg/dL · Rango: 70-100</div>
+        </div>
+      </div>
+      <div class="progress-bar" style="margin-bottom: 16px;"><div class="progress-fill" style="width:62%"></div></div>
+
+      <div class="list-row" style="border-bottom: none; margin-bottom: 0;">
+        <div class="info">
+          <div class="title">Colesterol total</div>
+          <div class="meta">175 mg/dL · Rango: &lt;200</div>
+        </div>
+      </div>
+      <div class="progress-bar" style="margin-bottom: 16px;"><div class="progress-fill" style="width:75%"></div></div>
+
+      <div class="list-row" style="border-bottom: none; margin-bottom: 0;">
+        <div class="info">
+          <div class="title">Hemoglobina</div>
+          <div class="meta">13.8 g/dL · Rango: 13-17</div>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:58%"></div></div>
+    </div>
+
+    <div class="panel">
+      <h2><i class="ti ti-file-text"></i> Estudios recientes</h2>
+      <div class="list-row" data-sound="click">
+        <div class="icon-box"><i class="ti ti-microscope"></i></div>
+        <div class="info">
+          <div class="title">Biometría hemática completa</div>
+          <div class="meta">Lab Central · 2 jun 2026</div>
+        </div>
+        <span class="badge badge-success">Normal</span>
+      </div>
+      <div class="list-row" data-sound="click">
+        <div class="icon-box"><i class="ti ti-microscope"></i></div>
+        <div class="info">
+          <div class="title">Perfil lipídico</div>
+          <div class="meta">Lab Central · 2 jun 2026</div>
+        </div>
+        <span class="badge badge-success">Normal</span>
+      </div>
+    </div>
+  </div>
+</Layout>

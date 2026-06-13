@@ -1,0 +1,123 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="VitaNexo · Dashboard">
+  <!-- Topbar -->
+  <div class="topbar">
+    <div>
+      <h1>Dashboard</h1>
+      <div class="sub">Buenos días, Shinji Ikari</div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" data-sound="click"><i class="ti ti-bell"></i></button>
+      <div class="avatar" style="width:38px; height:38px; font-size:14px; border-radius:10px;">SI</div>
+    </div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- Hazard Warning Bar (Evangelion Style) -->
+    <div class="hazard-bar"></div>
+
+    <!-- NERV System Status Alarm Panel -->
+    <div class="nerv-system-alert" data-sound="hover">
+      <div class="alert-tag">SYS STATUS: ACTIVE</div>
+      <div class="alert-desc">Sincronización del piloto al 98%. Estabilidad del campo A.T. óptima. No se detectan anomalías en el núcleo del Eva.</div>
+    </div>
+
+    <!-- KPIs -->
+    <div class="grid grid-4" style="margin-bottom:18px;">
+      <div class="kpi-card" style="--accent:var(--nerv-magenta)">
+        <div class="top">
+          <div>
+            <div class="label">PULSO // PULSE RATIO</div>
+            <div class="value">72<span class="unit"> bpm</span></div>
+          </div>
+          <i class="ti ti-heartbeat"></i>
+        </div>
+        <div class="trend">↑ estable</div>
+      </div>
+      <div class="kpi-card" style="--accent:var(--nerv-green)">
+        <div class="top">
+          <div>
+            <div class="label">SINCRONIZACIÓN // SYNC RATIO</div>
+            <div class="value">98<span class="unit"> %</span></div>
+          </div>
+          <i class="ti ti-droplet"></i>
+        </div>
+        <div class="trend">↑ normal</div>
+      </div>
+      <div class="kpi-card" style="--accent:var(--nerv-violet)">
+        <div class="top">
+          <div>
+            <div class="label">CAMPO A.T. // A.T. FIELD INTENSITY</div>
+            <div class="value">118<span class="unit">/76</span></div>
+          </div>
+          <i class="ti ti-activity"></i>
+        </div>
+        <div class="trend">→ óptima</div>
+      </div>
+      <div class="kpi-card" style="--accent:var(--nerv-amber)">
+        <div class="top">
+          <div>
+            <div class="label">TEMP. NÚCLEO // CORE TEMP</div>
+            <div class="value">36.6<span class="unit">°C</span></div>
+          </div>
+          <i class="ti ti-temperature"></i>
+        </div>
+        <div class="trend">→ normal</div>
+      </div>
+    </div>
+
+    <!-- Details Grid -->
+    <div class="grid grid-2">
+      <!-- Chart Panel -->
+      <div class="panel">
+        <h2><i class="ti ti-chart-line"></i> Frecuencia cardíaca — 7 días</h2>
+        <div class="chart-bars">
+          <div class="bar" style="height:60%" data-sound="hover"></div>
+          <div class="bar" style="height:75%" data-sound="hover"></div>
+          <div class="bar" style="height:50%" data-sound="hover"></div>
+          <div class="bar" style="height:85%" data-sound="hover"></div>
+          <div class="bar" style="height:65%" data-sound="hover"></div>
+          <div class="bar" style="height:90%" data-sound="hover"></div>
+          <div class="bar" style="height:72%" data-sound="hover"></div>
+        </div>
+        <div class="chart-labels">
+          <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+        </div>
+      </div>
+
+      <!-- Quick Info Panel -->
+      <div class="panel">
+        <h2><i class="ti ti-calendar-event"></i> Próxima cita</h2>
+        <a href="/appointments" class="list-row" data-sound="click">
+          <div class="icon-box"><i class="ti ti-stethoscope"></i></div>
+          <div class="info">
+            <div class="title">Dra. Yui Ikari</div>
+            <div class="meta">Pediatría · Viernes 09:00</div>
+          </div>
+          <span class="badge badge-success">Confirmada</span>
+        </a>
+
+        <h2 style="margin-top:18px;"><i class="ti ti-pill"></i> Medicamentos activos</h2>
+        <a href="/medications" class="list-row" data-sound="click">
+          <div class="icon-box"><i class="ti ti-pill"></i></div>
+          <div class="info">
+            <div class="title">Salbutamol</div>
+            <div class="meta">100mcg · Según necesidad</div>
+          </div>
+          <span class="badge badge-info">PRN</span>
+        </a>
+        <a href="/medications" class="list-row" data-sound="click">
+          <div class="icon-box"><i class="ti ti-pill"></i></div>
+          <div class="info">
+            <div class="title">Vitamina D3</div>
+            <div class="meta">1000 UI · Diario</div>
+          </div>
+          <span class="badge badge-success">Activo</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,29 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+<Layout title="VitaNexo · Ingresar">
+  <div class="banner">
+    <div class="logo">M E D I C A L &nbsp; A C C E S S</div>
+    <h1>VITANEXO</h1>
+  </div>
+
+  <div class="body">
+    <form action="/dashboard" method="get">
+      <div class="field">
+        <label>CORREO ELECTRÓNICO</label>
+        <input type="email" placeholder="tu@email.com" value="shinji@vitanexo.com" />
+      </div>
+      <div class="field">
+        <label>CONTRASEÑA</label>
+        <input type="password" placeholder="••••••••" value="Patient1234!" />
+      </div>
+      <button class="btn btn-primary" type="submit">INGRESAR</button>
+    </form>
+
+    <a class="btn-ghost" href="/dashboard">¿No tienes cuenta? Regístrate</a>
+
+    <div class="demo-note">
+      🧪 Demo estático — cualquier credencial te lleva al dashboard. Sin validación real.
+    </div>
+  </div>
+</Layout>
