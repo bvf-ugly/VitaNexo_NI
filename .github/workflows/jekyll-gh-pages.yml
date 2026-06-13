@@ -1,4 +1,4 @@
-name: Build and deploy web (React/Vite) to GitHub Pages
+name: Build and deploy web to GitHub Pages
 
 on:
   push:
@@ -15,19 +15,48 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  build:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Node.js 18
+      - name: Debug repo & detect prebuilt site
+        run: |
+          echo "Repo root listing:"
+          ls -la || true
+          echo "Listing web/:"
+          ls -la web || true
+          echo "Listing web/dist and web/build:"
+          ls -la web/dist || true
+          ls -la web/build || true
+
+      - name: Decide whether to use prebuilt files or build
+        id: decide
+        run: |
+          if [ -d ./web/dist ]; then
+            echo "PUBLISH_DIR=./web/dist" >> $GITHUB_ENV
+            echo "USE_BUILD=false" >> $GITHUB_ENV
+            echo "Using existing ./web/dist (prebuilt) as publish dir"
+          elif [ -d ./web/build ]; then
+            echo "PUBLISH_DIR=./web/build" >> $GITHUB_ENV
+            echo "USE_BUILD=false" >> $GITHUB_ENV
+            echo "Using existing ./web/build (prebuilt) as publish dir"
+          else
+            echo "PUBLISH_DIR=./web/dist" >> $GITHUB_ENV
+            echo "USE_BUILD=true" >> $GITHUB_ENV
+            echo "No prebuilt output found; workflow will build the site into ./web/dist"
+          fi
+
+      - name: Set up Node.js 18 (only if build needed)
+        if: env.USE_BUILD == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "18"
 
-      - name: Install dependencies and build (web)
+      - name: Install dependencies and build (web) (only if build needed)
+        if: env.USE_BUILD == 'true'
         working-directory: ./web
         run: |
           set -e
@@ -46,45 +75,24 @@ jobs:
             npm run build
           fi
 
-      - name: Debug build output and source check
+      - name: Validate publish dir
         run: |
-          echo "Listing web/src/pages (fuente):"
-          ls -la web/src/pages || true
-          echo "Listing web/:"
-          ls -la web || true
-          echo "Listing possible build outputs:"
-          ls -la web/dist || true
-          ls -la web/build || true
-
-      - name: Ensure build output exists and disable Jekyll
-        run: |
-          # Comprobación sencilla: no salimos aquí, la detección se hace más abajo
-          touch ./web/.build_check || true
-          # add .nojekyll later to chosen publish dir
-
-      - name: Determine publish directory (dist vs build)
-        run: |
-          if [ -d ./web/dist ]; then
-            echo "Using ./web/dist as publish dir"
-            echo "PUBLISH_DIR=./web/dist" >> $GITHUB_ENV
-          elif [ -d ./web/build ]; then
-            echo "Using ./web/build as publish dir"
-            echo "PUBLISH_DIR=./web/build" >> $GITHUB_ENV
-          else
-            echo "ERROR: No build output found in ./web/dist or ./web/build"
+          if [ -z "${PUBLISH_DIR}" ]; then
+            echo "PUBLISH_DIR not set, exiting"
+            exit 1
+          fi
+          if [ ! -d "${PUBLISH_DIR}" ]; then
+            echo "ERROR: publish dir ${PUBLISH_DIR} does not exist"
             ls -la web || true
             exit 1
           fi
+          echo "Publish dir OK: ${PUBLISH_DIR}"
+          ls -la "${PUBLISH_DIR}" || true
 
       - name: Prevent Jekyll in publish dir
         run: |
-          if [ -z "${PUBLISH_DIR}" ]; then
-            echo "PUBLISH_DIR not set"
-            exit 1
-          fi
           touch "${PUBLISH_DIR}/.nojekyll"
-          echo "Contents of publish dir:"
-          ls -la "${PUBLISH_DIR}" || true
+          echo ".nojekyll created in ${PUBLISH_DIR}"
 
       - name: Deploy to gh-pages via peaceiris
         uses: peaceiris/actions-gh-pages@v3
@@ -93,6 +101,3 @@ jobs:
           publish_dir: ${{ env.PUBLISH_DIR }}
           publish_branch: gh-pages
           keep_files: false
-          # opcional: establecer user si se desea
-          # user_name: "github-actions[bot]"
-          # user_email: "github-actions[bot]@users.noreply.github.com"
