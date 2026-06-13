@@ -1,4 +1,4 @@
-name: Build and deploy web (Vite) to GitHub Pages
+name: Build and deploy web (React/Vite) to GitHub Pages
 
 on:
   push:
@@ -46,30 +46,53 @@ jobs:
             npm run build
           fi
 
-      - name: Debug build output
+      - name: Debug build output and source check
         run: |
+          echo "Listing web/src/pages (fuente):"
+          ls -la web/src/pages || true
           echo "Listing web/:"
           ls -la web || true
-          echo "Listing web/dist (expected build output):"
+          echo "Listing possible build outputs:"
           ls -la web/dist || true
+          ls -la web/build || true
 
       - name: Ensure build output exists and disable Jekyll
         run: |
-          if [ ! -d ./web/dist ]; then
-            echo "ERROR: web/dist not found. Build failed or output path differs."
+          # Comprobación sencilla: no salimos aquí, la detección se hace más abajo
+          touch ./web/.build_check || true
+          # add .nojekyll later to chosen publish dir
+
+      - name: Determine publish directory (dist vs build)
+        run: |
+          if [ -d ./web/dist ]; then
+            echo "Using ./web/dist as publish dir"
+            echo "PUBLISH_DIR=./web/dist" >> $GITHUB_ENV
+          elif [ -d ./web/build ]; then
+            echo "Using ./web/build as publish dir"
+            echo "PUBLISH_DIR=./web/build" >> $GITHUB_ENV
+          else
+            echo "ERROR: No build output found in ./web/dist or ./web/build"
             ls -la web || true
             exit 1
           fi
-          # Prevent GitHub Pages from running Jekyll on the artifact
-          touch ./web/dist/.nojekyll
+
+      - name: Prevent Jekyll in publish dir
+        run: |
+          if [ -z "${PUBLISH_DIR}" ]; then
+            echo "PUBLISH_DIR not set"
+            exit 1
+          fi
+          touch "${PUBLISH_DIR}/.nojekyll"
+          echo "Contents of publish dir:"
+          ls -la "${PUBLISH_DIR}" || true
 
       - name: Deploy to gh-pages via peaceiris
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./web/dist
+          publish_dir: ${{ env.PUBLISH_DIR }}
           publish_branch: gh-pages
           keep_files: false
-          # opcional: establezca commit user si lo desea
+          # opcional: establecer user si se desea
           # user_name: "github-actions[bot]"
           # user_email: "github-actions[bot]@users.noreply.github.com"
