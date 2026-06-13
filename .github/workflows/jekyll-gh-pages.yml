@@ -1,4 +1,4 @@
-name: Build and deploy web to GitHub Pages
+name: Build and deploy web (Astro) to GitHub Pages
 
 on:
   push:
@@ -26,10 +26,11 @@ jobs:
         run: |
           echo "Repo root listing:"
           ls -la || true
-          echo "Listing docs/web, web/:"
+          echo "Listing docs/web and web:"
           ls -la docs/web || true
           ls -la web || true
-          echo "Listing web/dist and web/build:"
+          echo "Listing possible build outputs:"
+          ls -la docs/web || true
           ls -la web/dist || true
           ls -la web/build || true
 
@@ -54,19 +55,20 @@ jobs:
             echo "No prebuilt output found; workflow will build the site into ./web/dist"
           fi
 
-      - name: Set up Node.js 18 (only if build needed)
+      - name: Set up Node.js 18 (if build needed)
         if: env.USE_BUILD == 'true'
         uses: actions/setup-node@v4
         with:
           node-version: "18"
 
-      - name: Install dependencies and build (web) (only if build needed)
+      - name: Install dependencies and build (Astro) (if build needed)
         if: env.USE_BUILD == 'true'
         working-directory: ./web
         run: |
           set -e
           echo "PWD=$(pwd)"
-          if [ -f ../pnpm-lock.yaml ] || [ -f pnpm-lock.yaml ]; then
+          # Prefer pnpm if pnpm-lock exists
+          if [ -f pnpm-lock.yaml ] || [ -f ../pnpm-lock.yaml ]; then
             corepack enable
             corepack prepare pnpm@latest --activate
             pnpm install
