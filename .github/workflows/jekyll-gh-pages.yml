@@ -69,3 +69,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./web/dist
           publish_branch: gh-pages
+          keep_files: false
+          # opcional: establezca commit user si lo desea
+          # user_name: "github-actions[bot]"
+          # user_email: "github-actions[bot]@users.noreply.github.com"
