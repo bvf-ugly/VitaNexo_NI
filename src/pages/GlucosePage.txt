@@ -1,0 +1,218 @@
+import { useEffect, useState } from 'react'
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  Tooltip, ReferenceLine, ResponsiveContainer, Legend,
+} from 'recharts'
+import api from '../services/api'
+
+const CONTEXT_LABELS: Record<string, string> = {
+  fasting:   'Ayunas',
+  post_meal: 'Postprandial',
+  random:    'Aleatoria',
+  bedtime:   'Antes de dormir',
+}
+
+const STATUS_BADGE: Record<string, string> = {
+  low:      'bg-blue-100 text-blue-700',
+  normal:   'bg-green-100 text-green-700',
+  elevated: 'bg-yellow-100 text-yellow-700',
+  high:     'bg-red-100 text-red-700',
+}
+const STATUS_LABEL: Record<string, string> = {
+  low: 'Hipoglucemia', normal: 'Normal', elevated: 'Elevada', high: 'Alta',
+}
+
+function classify(v: number, ctx: string) {
+  const ranges: Record<string, [number, number, number]> = {
+    fasting:   [70, 100, 126],
+    post_meal: [70, 140, 200],
+    random:    [70, 140, 200],
+    bedtime:   [80, 120, 180],
+  }
+  const [low, norm, high] = ranges[ctx] || ranges.random
+  if (v < low)   return 'low'
+  if (v <= norm) return 'normal'
+  if (v <= high) return 'elevated'
+  return 'high'
+}
+
+export default function GlucosePage() {
+  const [patientId, setPatientId] = useState<string | null>(null)
+  const [stats,     setStats]     = useState<any>(null)
+  const [readings,  setReadings]  = useState<any[]>([])
+  const [form,      setForm]      = useState({ value_mgdl: '', context: 'fasting', notes: '' })
+  const [saving,    setSaving]    = useState(false)
+  const [msg,       setMsg]       = useState('')
+
+  useEffect(() => {
+    api.get('/patients').then(({ data }) => {
+      const pat = data[0]
+      if (!pat) return
+      setPatientId(pat._id)
+      loadData(pat._id)
+    })
+  }, [])
+
+  function loadData(pid: string) {
+    api.get(`/glucose/patient/${pid}/stats`).then(r => {
+      setStats(r.data)
+      setReadings((r.data.readings || []).slice().reverse().slice(-30))
+    })
+  }
+
+  async function submitReading(e: React.FormEvent) {
+    e.preventDefault()
+    if (!patientId || !form.value_mgdl) return
+    setSaving(true); setMsg('')
+    try {
+      await api.post('/glucose', {
+        patient_id: patientId,
+        value_mgdl: Number(form.value_mgdl),
+        context: form.context,
+        notes: form.notes || undefined,
+      })
+      setMsg('✅ Lectura guardada')
+      setForm({ value_mgdl: '', context: 'fasting', notes: '' })
+      loadData(patientId)
+    } catch (err: any) {
+      setMsg('❌ ' + (err.response?.data?.error || 'Error al guardar'))
+    } finally { setSaving(false) }
+  }
+
+  const chartData = readings.map(r => ({
+    fecha: new Date(r.recorded_at).toLocaleDateString('es-NI', { month: 'short', day: 'numeric' }),
+    glucosa: r.value_mgdl,
+    contexto: CONTEXT_LABELS[r.context] || r.context,
+  }))
+
+  return (
+    <div className="p-8 max-w-5xl">
+      <h2 className="text-2xl font-semibold text-slate-800 mb-1">🩸 Historial de Glucosa</h2>
+      <p className="text-slate-400 text-sm mb-6">Monitoreo de glucemia — María García (Diabetes Tipo 2)</p>
+
+      {/* Stats */}
+      {stats && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+          {[
+            { label: 'Promedio',   value: `${stats.avg_mgdl} mg/dL`, icon: '📊' },
+            { label: 'Mínimo',     value: `${stats.min_mgdl} mg/dL`, icon: '⬇️' },
+            { label: 'Máximo',     value: `${stats.max_mgdl} mg/dL`, icon: '⬆️' },
+            { label: 'En rango',   value: `${stats.in_range_pct}%`,  icon: '✅' },
+          ].map(s => (
+            <div key={s.label} className="bg-white border border-slate-200 rounded-xl p-4">
+              <div className="text-xl mb-1">{s.icon}</div>
+              <div className="font-bold text-slate-700">{s.value}</div>
+              <div className="text-xs text-slate-400">{s.label} — 30 días</div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Gráfica */}
+      {chartData.length > 0 && (
+        <div className="bg-white border border-slate-200 rounded-xl p-5 mb-8">
+          <h3 className="font-semibold text-slate-700 mb-4">Tendencia últimos 30 días</h3>
+          <ResponsiveContainer width="100%" height={240}>
+            <LineChart data={chartData} margin={{ left: -10 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
+              <XAxis dataKey="fecha" tick={{ fontSize: 11 }} />
+              <YAxis domain={[50, 250]} tick={{ fontSize: 11 }} unit=" mg/dL" />
+              <Tooltip formatter={(v: any) => [`${v} mg/dL`, 'Glucosa']} />
+              <ReferenceLine y={70}  stroke="#3b82f6" strokeDasharray="4 4" label={{ value: 'Hipo', position: 'right', fontSize: 10 }} />
+              <ReferenceLine y={100} stroke="#22c55e" strokeDasharray="4 4" label={{ value: 'Normal', position: 'right', fontSize: 10 }} />
+              <ReferenceLine y={140} stroke="#f59e0b" strokeDasharray="4 4" label={{ value: 'Elevada', position: 'right', fontSize: 10 }} />
+              <Line type="monotone" dataKey="glucosa" stroke="#0ea5e9" strokeWidth={2} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Tabla */}
+        <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+          <div className="px-5 py-4 border-b border-slate-100">
+            <h3 className="font-semibold text-slate-700">Últimas lecturas</h3>
+          </div>
+          <div className="overflow-auto max-h-72">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-slate-500 text-xs">
+                <tr>
+                  <th className="px-4 py-2 text-left">Fecha</th>
+                  <th className="px-4 py-2 text-left">mg/dL</th>
+                  <th className="px-4 py-2 text-left">Contexto</th>
+                  <th className="px-4 py-2 text-left">Estado</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {[...readings].reverse().slice(0, 15).map((r, i) => {
+                  const status = classify(r.value_mgdl, r.context)
+                  return (
+                    <tr key={i} className="hover:bg-slate-50">
+                      <td className="px-4 py-2 text-slate-600">
+                        {new Date(r.recorded_at).toLocaleDateString('es-NI', { month: 'short', day: 'numeric' })}
+                      </td>
+                      <td className="px-4 py-2 font-semibold text-slate-800">{r.value_mgdl}</td>
+                      <td className="px-4 py-2 text-slate-500">{CONTEXT_LABELS[r.context]}</td>
+                      <td className="px-4 py-2">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_BADGE[status]}`}>
+                          {STATUS_LABEL[status]}
+                        </span>
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Formulario */}
+        <div className="bg-white border border-slate-200 rounded-xl p-5">
+          <h3 className="font-semibold text-slate-700 mb-4">Registrar nueva lectura</h3>
+          <form onSubmit={submitReading} className="space-y-3">
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">Glucosa (mg/dL)</label>
+              <input
+                type="number" min="20" max="600" required
+                value={form.value_mgdl}
+                onChange={e => setForm(f => ({ ...f, value_mgdl: e.target.value }))}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                placeholder="ej. 95"
+              />
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">Contexto</label>
+              <select
+                value={form.context}
+                onChange={e => setForm(f => ({ ...f, context: e.target.value }))}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+              >
+                <option value="fasting">Ayunas</option>
+                <option value="post_meal">Postprandial (2h después de comer)</option>
+                <option value="random">Aleatoria</option>
+                <option value="bedtime">Antes de dormir</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs text-slate-500 mb-1">Notas (opcional)</label>
+              <input
+                type="text"
+                value={form.notes}
+                onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+                className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-sky-400"
+                placeholder="ej. Después del desayuno"
+              />
+            </div>
+            {msg && <p className="text-sm py-1">{msg}</p>}
+            <button
+              type="submit" disabled={saving}
+              className="w-full bg-sky-500 hover:bg-sky-600 text-white font-medium rounded-lg py-2.5 text-sm transition disabled:opacity-50"
+            >
+              {saving ? 'Guardando...' : 'Guardar lectura'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  )
+}
