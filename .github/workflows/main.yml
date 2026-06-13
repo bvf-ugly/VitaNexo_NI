@@ -1,0 +1,73 @@
+name: Deploy site to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment: github-pages
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: true
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Use Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies and build
+        working-directory: ./web
+        run: |
+          set -e
+          echo "PWD=$(pwd)"
+          # Detect pnpm lockfile either in web or repository root
+          if [ -f ../pnpm-lock.yaml ] || [ -f pnpm-lock.yaml ]; then
+            corepack enable
+            corepack prepare pnpm@latest --activate
+            pnpm install
+            pnpm build
+          elif [ -f package-lock.json ] || [ -f ../package-lock.json ]; then
+            npm ci
+            npm run build
+          else
+            npm install
+            npm run build
+          fi
+
+      - name: Debug build output
+        run: |
+          echo "Contents of web/:"
+          ls -la web || true
+          echo "Contents of web/dist (build output):"
+          ls -la web/dist || true
+
+      - name: Ensure output exists and disable Jekyll
+        run: |
+          if [ -d ./web/dist ]; then
+            echo "Build output found at web/dist"
+          else
+            echo "ERROR: Build did not produce web/dist — aborting."
+            ls -la web || true
+            exit 1
+          fi
+          # Prevent GitHub Pages from processing files with Jekyll
+          touch ./web/dist/.nojekyll
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./web/dist
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
