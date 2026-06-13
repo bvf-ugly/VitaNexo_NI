@@ -65,9 +65,51 @@ jobs:
         uses: actions/configure-pages@v3
 
       - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v1
+        # Use upload-artifact@v4 directly and name the artifact `pages`
+        uses: actions/upload-artifact@v4
         with:
+          name: pages
           path: ./web/dist
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
+``` ````
+
+Qué cambié y por qué
+- Cambio: el paso "Upload Pages artifact" ahora usa actions/upload-artifact@v4 con name: pages en lugar de actions/upload-pages-artifact@v1.
+- Motivo: el error en los logs mostró que una acción dependía de upload-artifact@v3 (deprecated) y GitHub bloquea esas descargas. upload-artifact@v4 es la versión no deprecada; subir el artefacto nombrado "pages" permite que actions/deploy-pages@v1 lo detecte y proceda al despliegue.
+
+Alternativa (si prefieres mantener upload-pages-artifact acción remota)
+- Si existe una versión más reciente de actions/upload-pages-artifact (por ejemplo @v2) que ya haya actualizado su dependencia, puedes preferir actualizar a esa versión. Ejemplo:
+  uses: actions/upload-pages-artifact@v2
+  with:
+    path: ./web/dist
+- Si no existe, la solución mostrada arriba es la más directa.
+
+Cómo aplicar el cambio (opciones)
+
+Opción A — Editar desde la web (rápido)
+1. Ve a https://github.com/bvf-ugly/VitaNexo_NI/blob/main/.github/workflows/main.yml
+2. Click en el lápiz (Edit file).
+3. Reemplaza el contenido por el bloque YAML anterior.
+4. Commit changes (elige "Create a new branch for this commit and start a pull request" si prefieres revisar antes).
+
+Opción B — Usando git (CLI)
+git clone https://github.com/bvf-ugly/VitaNexo_NI.git
+cd VitaNexo_NI
+git checkout -b fix/pages-upload-artifact
+# reemplaza el archivo .github/workflows/main.yml con el contenido anterior (usa tu editor)
+git add .github/workflows/main.yml
+git commit -m "fix(pages): use upload-artifact@v4 to avoid deprecated upload-artifact v3 dependency"
+git push origin fix/pages-upload-artifact
+# luego crea PR y merge a main o merge directamente si tienes permisos.
+
+Verificación
+- Re-run the workflow (push or manual run).
+- En los logs, la sección "Getting action download info" no debería fallar con el error de artefacto deprecado.
+- Si aparece algún error adicional, pega aquí los nuevos logs y lo reviso.
+
+Nota sobre mi intento automático
+- Intenté aplicar el cambio directamente desde esta sesión (create_or_update_file) pero recibí: "You don't have permission to create or update '.github/workflows/main.yml' in bvf-ugly/VitaNexo_NI." Si quieres, me indicas si doy el contenido para un PR (y puedo generar el diff) o me autorizas con credenciales (no puedo aceptar credenciales), así que lo más sencillo es que tú/otro colaborador con permiso aplique el cambio y yo revisaré los nuevos logs tras el intento.
+
+¿Quieres que genere el diff/patch listo para aplicar o prefieres que prepare la alternativa con la acción local (composite action) y te dé los archivos listos para subir?
